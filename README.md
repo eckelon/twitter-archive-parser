@@ -1,3 +1,5 @@
+This is a fork of [Tim Hutton's original project](https://github.com/timhutton/twitter-archive-parser/). I have modified the script to generate one file per day (and not per month) and adapted it to spanish.
+
 ## How do I use it?
 1. [Download your Twitter archive](https://twitter.com/settings/download_your_data) (Settings > Your account > Download an archive of your data).
 2. Unzip to a folder.
