@@ -1,4 +1,10 @@
-This is a fork of [Tim Hutton's original project](https://github.com/timhutton/twitter-archive-parser/). I have modified the script to generate one file per day (and not per month) and adapted it to spanish.
+This is a fork of [Tim Hutton's original project](https://github.com/timhutton/twitter-archive-parser/). I have modified the script so:
+- It generates one file per day (and not per month).
+- The content is cleaner and using "- - -" as horizontal line.
+- The name of the generated files is just "YYYY-MM-dd.md".
+- It has some adaptations into Spanish.
+
+- - -
 
 ## How do I use it?
 1. [Download your Twitter archive](https://twitter.com/settings/download_your_data) (Settings > Your account > Download an archive of your data).

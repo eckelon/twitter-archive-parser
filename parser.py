@@ -82,12 +82,12 @@ class PathConfig:
         self.files_input_tweets             = find_files_input_tweets(self.dir_input_data)
 
         # structured like an actual tweet output file, can be used to compute relative urls to a media file
-        self.example_file_output_tweets = self.create_path_for_file_output_tweets(year=2020, month=12)
+        self.example_file_output_tweets = self.create_path_for_file_output_tweets(year=2020, month=12, day=1)
 
-    def create_path_for_file_output_tweets(self, year, month, format="html", kind="tweets") -> str:
+    def create_path_for_file_output_tweets(self, year, month, day, format="html", kind="tweets") -> str:
         """Builds the path for a tweet-archive file based on some properties."""
         # Previously the filename was f'{dt.year}-{dt.month:02}-01-Tweet-Archive-{dt.year}-{dt.month:02}'
-        return os.path.join(self.dir_output, f"{kind}-{format}", f"{year:04}", f"{year:04}-{month:02}-01-{kind}.{format}")
+        return os.path.join(self.dir_output, f"{kind}-{format}", f"{year:04}", f"{year:04}-{month:02}-{day:02}.{format}")
 
     def create_path_for_file_output_dms(self, name: str, index: Optional[int]=None, format: str="html", kind: str="DMs") -> str:
         """Builds the path for a dm-archive file based on some properties."""
@@ -245,7 +245,7 @@ def escape_markdown(input_text: str) -> str:
     Escape markdown control characters from input text so that the text will not break in rendered markdown.
     (Only use on unformatted text parts that do not yet have any markdown control characters added on purpose!)
     """
-    characters_to_escape: str = r"\_*[]()~`>#+-=|{}.!"
+    characters_to_escape: str = r"\_*~`>#|{}"
     output_text: str = ''
     for char in input_text:
         if char in characters_to_escape:
@@ -390,15 +390,13 @@ def convert_tweet(tweet, username, media_sources, users: dict, paths: PathConfig
         body_markdown = body_markdown.replace(escape_markdown(original_url), markdown)
         body_html = body_html.replace(original_url, html)
     # make the body a quote
-    body_markdown = '> ' + '\n> '.join(body_markdown.splitlines())
+    body_markdown = '> ' + '\n> '.join(body_markdown.splitlines()) + '\n\n'
     body_html = '<p><blockquote>' + '<br>\n'.join(body_html.splitlines()) + '</blockquote>'
     # append the original Twitter URL as a link
     original_tweet_url = f'https://twitter.com/{username}/status/{tweet_id_str}'
     icon_url = rel_url(paths.file_tweet_icon, paths.example_file_output_tweets) 
-    body_markdown = header_markdown + body_markdown + f'\n\n<img src="{icon_url}" width="12" /> ' \
-                                                      f'[{timestamp_str}]({original_tweet_url})'
-    body_html = header_html + body_html + f'<a href="{original_tweet_url}"><img src="{icon_url}" ' \
-                                          f'width="12" />&nbsp;{timestamp_str}</a></p>'
+    body_markdown = header_markdown + body_markdown + f'[{timestamp_str}]({original_tweet_url})'
+    body_html = header_html + body_html + f'<a href="{original_tweet_url}">{timestamp_str}</a></p>'
     # extract user_id:handle connections
     if 'in_reply_to_user_id' in tweet and 'in_reply_to_screen_name' in tweet and \
             tweet['in_reply_to_screen_name'] is not None:
@@ -607,18 +605,18 @@ def parse_tweets(username, users, html_template, paths: PathConfig):
     for timestamp, md, html in tweets:
         # Use a (markdown) filename that can be imported into Jekyll: YYYY-MM-DD-your-title-here.md
         dt = datetime.datetime.fromtimestamp(timestamp)
-        grouped_tweets[(dt.year, dt.month)].append((md, html))
+        grouped_tweets[(dt.year, dt.month, dt.day)].append((md, html))
 
-    for (year, month), content in grouped_tweets.items():
+    for (year, month, day), content in grouped_tweets.items():
         # Write into *.md files
-        md_string = '\n\n----\n\n'.join(md for md, _ in content)
-        md_path = paths.create_path_for_file_output_tweets(year, month, format="md")
+        md_string = '\n- - -\n\n'.join(md for md, _ in content)
+        md_path = paths.create_path_for_file_output_tweets(year, month, day, format="md")
         with open_and_mkdirs(md_path) as f:
             f.write(md_string)
 
         # Write into *.html files
         html_string = '<hr>\n'.join(html for _, html in content)
-        html_path = paths.create_path_for_file_output_tweets(year, month, format="html")
+        html_path = paths.create_path_for_file_output_tweets(year, month, day, format="html")
         with open_and_mkdirs(html_path) as f:
             f.write(html_template.format(html_string))
 
